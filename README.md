@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://haroone.com/">
-    <img src="https://haroone.com/images/logos/haroone-head.png" alt="Haroone Agency" width="160">
+    <img src="docs/media/haroone-admin-reindex-banner.png" alt="Haroone Agency" width="960">
   </a>
 </p>
 
