@@ -76,12 +76,11 @@ The module supports Magento Open Source and Adobe Commerce. The compatibility ma
 
 ## Installation
 
-### Composer from GitHub
+### Composer
 
-Until the package is listed on Packagist, register the GitHub repository as a Composer VCS source:
+Install the stable release from Packagist:
 
 ```bash
-composer config repositories.haroone-admin-reindex vcs https://github.com/haroonsulahri/magento2-admin-reindex.git
 composer require haroone/module-admin-reindex:^1.0
 php bin/magento module:enable Haroone_AdminReindex
 php bin/magento setup:upgrade
