@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright (c) 2026 Haroone.com
+ *
+ * SPDX-License-Identifier: MIT
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework-message-queue:etc/consumer.xsd">
+    <consumer name="haroone.adminreindex.indexer"
+              queue="haroone.adminreindex.indexer"
+              handler="Haroone\AdminReindex\Model\Consumer::process"/>
+</config>

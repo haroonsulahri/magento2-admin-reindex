@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright (c) 2026 Haroone.com
+ *
+ * SPDX-License-Identifier: MIT
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Haroone_AdminReindex::css/progress.css"/>
+    </head>
+    <body>
+        <referenceBlock name="adminhtml.indexer.grid.grid.massaction">
+            <arguments>
+                <argument name="options" xsi:type="array">
+                    <updater>Haroone\AdminReindex\Block\Backend\Grid\ItemsUpdater</updater>
+                    <item name="reindex_selected" xsi:type="array">
+                        <item name="label" xsi:type="string" translate="true">Reindex</item>
+                        <item name="url" xsi:type="string">haroone_adminreindex/indexer/reindex</item>
+                        <item name="confirm" xsi:type="string" translate="true">Queue the selected indexer(s) for background reindexing?</item>
+                    </item>
+                </argument>
+            </arguments>
+        </referenceBlock>
+        <referenceContainer name="content">
+            <block class="Haroone\AdminReindex\Block\Adminhtml\Progress"
+                   name="haroone.adminreindex.progress"
+                   template="Haroone_AdminReindex::progress.phtml"
+                   after="-"/>
+        </referenceContainer>
+    </body>
+</page>

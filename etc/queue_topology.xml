@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright (c) 2026 Haroone.com
+ *
+ * SPDX-License-Identifier: MIT
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework-message-queue:etc/topology.xsd">
+    <exchange name="magento">
+        <binding id="harooneAdminReindexBinding"
+                 topic="haroone.adminreindex.indexer"
+                 destination="haroone.adminreindex.indexer"/>
+    </exchange>
+</config>

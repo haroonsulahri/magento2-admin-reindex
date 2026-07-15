@@ -1,0 +1,98 @@
+<?php
+/**
+ * Copyright (c) 2026 Haroone.com
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+/** @var \Haroone\AdminReindex\Block\Adminhtml\Progress $block */
+/** @var \Magento\Framework\Escaper $escaper */
+?>
+<div id="admin-reindex-progress"
+     class="admin-reindex-progress is-queued"
+     data-mage-init="<?= $escaper->escapeHtmlAttr($block->getMageInit()) ?>"
+     hidden>
+    <div class="admin-reindex-progress__status" aria-live="polite" aria-atomic="true">
+        <span class="admin-reindex-progress__marker" aria-hidden="true">
+            <span class="admin-reindex-progress__spinner"></span>
+            <svg class="admin-reindex-progress__icon admin-reindex-progress__icon-queued"
+                 viewBox="0 0 24 24" focusable="false">
+                <circle cx="12" cy="12" r="8"></circle>
+                <path d="M12 7v5l3 2"></path>
+            </svg>
+            <svg class="admin-reindex-progress__icon admin-reindex-progress__icon-complete"
+                 viewBox="0 0 24 24" focusable="false">
+                <path d="m6 12 4 4 8-9"></path>
+            </svg>
+            <svg class="admin-reindex-progress__icon admin-reindex-progress__icon-error"
+                 viewBox="0 0 24 24" focusable="false">
+                <path d="M12 8v5"></path>
+                <path d="M12 17h.01"></path>
+                <path d="M12 3 2 21h20L12 3Z"></path>
+            </svg>
+        </span>
+        <div class="admin-reindex-progress__status-copy">
+            <p class="admin-reindex-progress__eyebrow" data-role="status-label">
+                <?= $escaper->escapeHtml(__('Queued')) ?>
+            </p>
+            <h2 class="admin-reindex-progress__summary" data-role="summary">
+                <?= $escaper->escapeHtml(__('Waiting to start')) ?>
+            </h2>
+            <p class="admin-reindex-progress__detail" data-role="detail">
+                <?= $escaper->escapeHtml(__('Waiting for Magento queue consumer to start.')) ?>
+            </p>
+        </div>
+    </div>
+
+    <div class="admin-reindex-progress__progress">
+        <div class="admin-reindex-progress__track"
+             data-role="progress-track"
+             role="progressbar"
+             aria-label="<?= $escaper->escapeHtmlAttr(__('Reindex progress')) ?>"
+             aria-valuemin="0"
+             aria-valuemax="100"
+             aria-valuenow="0">
+            <span class="admin-reindex-progress__bar" data-role="progress-bar"></span>
+        </div>
+        <div class="admin-reindex-progress__progress-meta">
+            <span data-role="remaining"><?= $escaper->escapeHtml(__('Preparing selected indexers...')) ?></span>
+            <span data-role="percent">0%</span>
+        </div>
+    </div>
+
+    <div class="admin-reindex-progress__metrics" aria-label="<?= $escaper->escapeHtmlAttr(__('Reindex totals')) ?>">
+        <div class="admin-reindex-progress__metric">
+            <span class="admin-reindex-progress__metric-value" data-role="total">0</span>
+            <span class="admin-reindex-progress__metric-label"><?= $escaper->escapeHtml(__('Total')) ?></span>
+        </div>
+        <div class="admin-reindex-progress__metric">
+            <span class="admin-reindex-progress__metric-value" data-role="successful">0</span>
+            <span class="admin-reindex-progress__metric-label"><?= $escaper->escapeHtml(__('Completed')) ?></span>
+        </div>
+        <div class="admin-reindex-progress__metric">
+            <span class="admin-reindex-progress__metric-value" data-role="skipped">0</span>
+            <span class="admin-reindex-progress__metric-label"><?= $escaper->escapeHtml(__('Skipped')) ?></span>
+        </div>
+        <div class="admin-reindex-progress__metric">
+            <span class="admin-reindex-progress__metric-value" data-role="failed">0</span>
+            <span class="admin-reindex-progress__metric-label"><?= $escaper->escapeHtml(__('Failed')) ?></span>
+        </div>
+    </div>
+
+    <div class="admin-reindex-progress__results" data-role="results-panel" hidden>
+        <h3><?= $escaper->escapeHtml(__('Indexer progress')) ?></h3>
+        <ul data-role="results"></ul>
+    </div>
+
+    <p class="admin-reindex-progress__note" data-role="note">
+        <?= $escaper->escapeHtml(
+            __('You can close this window or leave the page. The background job will keep running.')
+        ) ?>
+    </p>
+
+    <div class="admin-reindex-progress__actions">
+        <button type="button" class="action-secondary" data-role="close">
+            <span><?= $escaper->escapeHtml(__('Close and keep running')) ?></span>
+        </button>
+    </div>
+</div>

@@ -1,0 +1,42 @@
+{
+    "name": "haroone/module-admin-reindex",
+    "description": "Adds secure background reindexing with progress to Magento 2 Index Management.",
+    "type": "magento2-module",
+    "license": "MIT",
+    "keywords": [
+        "magento2",
+        "admin",
+        "indexer",
+        "reindex",
+        "background"
+    ],
+    "authors": [
+        {
+            "name": "Haroone Agency",
+            "homepage": "https://haroone.com"
+        }
+    ],
+    "homepage": "https://haroone.com/",
+    "support": {
+        "issues": "https://github.com/haroonsulahri/magento2-admin-reindex/issues",
+        "source": "https://github.com/haroonsulahri/magento2-admin-reindex"
+    },
+    "require": {
+        "php": "^8.1",
+        "magento/framework": "^103.0.4",
+        "magento/framework-bulk": "^101.0.1",
+        "magento/module-asynchronous-operations": "^100.4.4",
+        "magento/module-authorization": "^100.4.4",
+        "magento/module-backend": "^102.0.4",
+        "magento/module-indexer": "^100.4.4",
+        "magento/module-message-queue": "^100.4.4"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Haroone\\AdminReindex\\": ""
+        }
+    }
+}

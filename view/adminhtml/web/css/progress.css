@@ -1,0 +1,311 @@
+.admin-reindex-modal.modal-popup .modal-inner-wrap {
+    max-width: 68rem;
+    width: calc(100% - 4.8rem);
+}
+
+.admin-reindex-modal.modal-popup .modal-header {
+    padding: 2.8rem 3.2rem 0;
+}
+
+.admin-reindex-modal.modal-popup .modal-title {
+    border: 0;
+    color: #303030;
+    font-size: 2.4rem;
+    font-weight: 500;
+    padding-bottom: 0;
+}
+
+.admin-reindex-modal.modal-popup .modal-content {
+    padding: 2.4rem 3.2rem 3.2rem;
+}
+
+.admin-reindex-progress {
+    color: #303030;
+}
+
+.admin-reindex-progress [hidden] {
+    display: none !important;
+}
+
+.admin-reindex-progress__status {
+    align-items: flex-start;
+    display: flex;
+    gap: 1.6rem;
+}
+
+.admin-reindex-progress__marker {
+    align-items: center;
+    background: #fff1e8;
+    border: 1px solid #f7c5a7;
+    border-radius: 50%;
+    color: #eb5202;
+    display: flex;
+    flex: 0 0 4.8rem;
+    height: 4.8rem;
+    justify-content: center;
+}
+
+.admin-reindex-progress__spinner {
+    animation: admin-reindex-spin .8s linear infinite;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    border-top-color: transparent;
+    display: none;
+    height: 2rem;
+    width: 2rem;
+}
+
+.admin-reindex-progress__icon {
+    display: none;
+    fill: none;
+    height: 2.4rem;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    width: 2.4rem;
+}
+
+.admin-reindex-progress.is-submitting .admin-reindex-progress__spinner,
+.admin-reindex-progress.is-running .admin-reindex-progress__spinner,
+.admin-reindex-progress.is-queued .admin-reindex-progress__icon-queued,
+.admin-reindex-progress.is-complete .admin-reindex-progress__icon-complete,
+.admin-reindex-progress.is-error .admin-reindex-progress__icon-error {
+    display: block;
+}
+
+.admin-reindex-progress.is-complete .admin-reindex-progress__marker {
+    background: #edf7e8;
+    border-color: #b8d9a8;
+    color: #4b7f2a;
+}
+
+.admin-reindex-progress.is-error .admin-reindex-progress__marker {
+    background: #fff0f0;
+    border-color: #e7b4b4;
+    color: #c62828;
+}
+
+.admin-reindex-progress__status-copy {
+    min-width: 0;
+}
+
+.admin-reindex-progress__eyebrow {
+    color: #6f6f6f;
+    font-size: 1.2rem;
+    font-weight: 500;
+    letter-spacing: .04em;
+    margin: .2rem 0 .4rem;
+    text-transform: uppercase;
+}
+
+.admin-reindex-progress__summary {
+    color: #303030;
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1.25;
+    margin: 0 0 .6rem;
+}
+
+.admin-reindex-progress__detail {
+    color: #555;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.admin-reindex-progress__progress {
+    margin-top: 2.4rem;
+}
+
+.admin-reindex-progress__track {
+    background: #e6e6e6;
+    border-radius: .4rem;
+    height: .8rem;
+    overflow: hidden;
+}
+
+.admin-reindex-progress__bar {
+    background: #eb5202;
+    display: block;
+    height: 100%;
+    transition: width .2s ease;
+    width: 0;
+}
+
+.admin-reindex-progress.is-submitting .admin-reindex-progress__bar,
+.admin-reindex-progress.is-queued .admin-reindex-progress__bar {
+    transition: none;
+}
+
+.admin-reindex-progress.is-complete .admin-reindex-progress__bar {
+    background: #6d9d4b;
+}
+
+.admin-reindex-progress.is-error .admin-reindex-progress__bar {
+    background: #c62828;
+}
+
+.admin-reindex-progress__progress-meta {
+    color: #6f6f6f;
+    display: flex;
+    font-size: 1.2rem;
+    justify-content: space-between;
+    margin-top: .8rem;
+}
+
+.admin-reindex-progress__metrics {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 2rem;
+}
+
+.admin-reindex-progress__metric {
+    background: #fafafa;
+    border: 1px solid #e3e3e3;
+    border-radius: .4rem;
+    padding: 1.2rem 1.4rem;
+}
+
+.admin-reindex-progress__metric-value,
+.admin-reindex-progress__metric-label {
+    display: block;
+}
+
+.admin-reindex-progress__metric-value {
+    color: #303030;
+    font-size: 2.2rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.admin-reindex-progress__metric-label {
+    color: #6f6f6f;
+    font-size: 1.2rem;
+    margin-top: .3rem;
+}
+
+.admin-reindex-progress__results {
+    border-top: 1px solid #e3e3e3;
+    margin-top: 2rem;
+    padding-top: 1.8rem;
+}
+
+.admin-reindex-progress__results h3 {
+    font-size: 1.4rem;
+    font-weight: 500;
+    margin: 0 0 .8rem;
+}
+
+.admin-reindex-progress__results ul {
+    list-style: none;
+    margin: 0;
+    max-height: 14rem;
+    overflow: auto;
+    padding: 0;
+}
+
+.admin-reindex-progress__results li {
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    gap: .8rem;
+    padding: .8rem 0;
+}
+
+.admin-reindex-progress__results li::before {
+    align-items: center;
+    border-radius: 50%;
+    content: '';
+    display: flex;
+    flex: 0 0 1.4rem;
+    height: 1.4rem;
+    justify-content: center;
+    width: 1.4rem;
+}
+
+.admin-reindex-progress__results li.is-complete::before {
+    color: #4b7f2a;
+    content: '\2713';
+    font-size: 1.5rem;
+}
+
+.admin-reindex-progress__results li.is-running::before {
+    animation: admin-reindex-spin .8s linear infinite;
+    border: 2px solid #1979c3;
+    border-top-color: transparent;
+    box-sizing: border-box;
+}
+
+.admin-reindex-progress__results li.is-skipped::before {
+    background: #fff4d6;
+    color: #8a6d1f;
+    content: '\2212';
+}
+
+.admin-reindex-progress__results li.is-failed::before {
+    background: #fff0f0;
+    color: #c62828;
+    content: '!';
+    font-weight: 500;
+}
+
+.admin-reindex-progress__note {
+    background: #f5f5f5;
+    border-left: .3rem solid #adadad;
+    color: #555;
+    line-height: 1.5;
+    margin: 2rem 0 0;
+    padding: 1rem 1.2rem;
+}
+
+.admin-reindex-progress__actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2.4rem;
+}
+
+@keyframes admin-reindex-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 767px) {
+    .admin-reindex-modal.modal-popup .modal-inner-wrap {
+        width: 100%;
+    }
+
+    .admin-reindex-modal.modal-popup .modal-header {
+        padding: 2.4rem 2rem 0;
+    }
+
+    .admin-reindex-modal.modal-popup .modal-content {
+        padding: 2rem;
+    }
+
+    .admin-reindex-progress__metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-reindex-progress__actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .admin-reindex-progress__actions button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-reindex-progress__spinner,
+    .admin-reindex-progress__results li.is-running::before {
+        animation: none;
+    }
+
+    .admin-reindex-progress__bar {
+        transition: none;
+    }
+}
