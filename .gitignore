@@ -1,7 +1,15 @@
 /.idea/
+/.env
+/.env.*
+/.npmrc
 /.phpunit.cache/
 /.phpunit.result.cache
 /auth.json
+/composer-auth.json
 /coverage/
 /vendor/
+/*.key
+/*.p12
+/*.pfx
+/*.pem
 composer.lock
