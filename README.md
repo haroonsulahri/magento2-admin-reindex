@@ -65,14 +65,14 @@ Magento provides the indexer commands on the server, but it does not provide a n
 
 | Magento release | Supported PHP versions | CI test version |
 | --- | --- | --- |
-| 2.4.4 | 8.1 | 2.4.4-p18 / PHP 8.1 |
-| 2.4.5 | 8.1 | 2.4.5-p17 / PHP 8.1 |
+| 2.4.4 | 8.1 | 2.4.4-p13 / PHP 8.1 |
+| 2.4.5 | 8.1 | 2.4.5-p14 / PHP 8.1 |
 | 2.4.6 | 8.1, 8.2 | 2.4.6-p15 / PHP 8.2 |
 | 2.4.7 | 8.2, 8.3 | 2.4.7-p10 / PHP 8.3 |
 | 2.4.8 | 8.3, 8.4 | 2.4.8-p5 / PHP 8.4 |
 | 2.4.9 | 8.4, 8.5 | 2.4.9 / PHP 8.5 |
 
-The module supports Magento Open Source and Adobe Commerce. The compatibility matrix follows Adobe's published [system requirements](https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements) and [released versions](https://experienceleague.adobe.com/en/docs/commerce-operations/release/versions).
+The module supports Magento Open Source and Adobe Commerce. CI installs the latest publicly available `magento/project-community-edition` package for each release line; Adobe Commerce extended-support patch numbers can be higher. The compatibility matrix follows Adobe's published [system requirements](https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements) and [released versions](https://experienceleague.adobe.com/en/docs/commerce-operations/release/versions).
 
 ## Installation
 
