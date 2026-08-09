@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+## [1.1.0] - 2026-08-09
+
+- Added background **Reset** beside **Reindex** and replaced Magento's duplicate synchronous **Invalidate index** action.
+- Added a worker-health banner based on the consumer lock, pending operation age, last processed timestamp, and consumer cron history.
+- Added a pre-scheduling worker check while still allowing jobs to queue for later processing.
+- Added a race-safe deduplication guard that reuses progress from active operations instead of queuing the same indexer twice.
+- Added multi-bulk progress aggregation for selections containing both new and already-active indexers.
+- Documented Magento LockManager providers and multi-node safety explicitly.
+
 ## [1.0.0] - 2026-07-16
 
 - Added the secured **Reindex** action to Magento Index Management.

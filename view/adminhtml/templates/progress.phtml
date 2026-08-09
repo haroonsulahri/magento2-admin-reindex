@@ -8,6 +8,11 @@
 /** @var \Haroone\AdminReindex\Block\Adminhtml\Progress $block */
 /** @var \Magento\Framework\Escaper $escaper */
 ?>
+<?php if (!$block->isWorkerDetected()): ?>
+    <div class="message message-warning" role="alert">
+        <?= $escaper->escapeHtml($block->getWorkerWarning()) ?>
+    </div>
+<?php endif; ?>
 <div id="admin-reindex-progress"
      class="admin-reindex-progress is-queued"
      data-mage-init="<?= $escaper->escapeHtmlAttr($block->getMageInit()) ?>"
@@ -48,7 +53,7 @@
         <div class="admin-reindex-progress__track"
              data-role="progress-track"
              role="progressbar"
-             aria-label="<?= $escaper->escapeHtmlAttr(__('Reindex progress')) ?>"
+             aria-label="<?= $escaper->escapeHtmlAttr(__('Indexer operation progress')) ?>"
              aria-valuemin="0"
              aria-valuemax="100"
              aria-valuenow="0">
@@ -60,7 +65,8 @@
         </div>
     </div>
 
-    <div class="admin-reindex-progress__metrics" aria-label="<?= $escaper->escapeHtmlAttr(__('Reindex totals')) ?>">
+    <div class="admin-reindex-progress__metrics"
+         aria-label="<?= $escaper->escapeHtmlAttr(__('Indexer operation totals')) ?>">
         <div class="admin-reindex-progress__metric">
             <span class="admin-reindex-progress__metric-value" data-role="total">0</span>
             <span class="admin-reindex-progress__metric-label"><?= $escaper->escapeHtml(__('Total')) ?></span>

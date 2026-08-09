@@ -38,7 +38,7 @@ define([
             type: 'popup',
             responsive: true,
             modalClass: 'admin-reindex-modal',
-            title: $t('Background reindex'),
+            title: $t('Background indexer operation'),
             buttons: [],
             closed: function () {
                 stopped = true;
@@ -58,6 +58,10 @@ define([
             });
 
             return message;
+        }
+
+        function actionLabel(action) {
+            return action === 'reset' ? $t('Reset') : $t('Reindex');
         }
 
         function setState(state) {
@@ -80,7 +84,7 @@ define([
             $failed.text(data.failed || 0);
         }
 
-        function openProgress(expectedTotal) {
+        function openProgress(expectedTotal, label) {
             stopped = false;
             refreshOnClose = false;
             window.clearTimeout(timer);
@@ -93,8 +97,8 @@ define([
             setProgress(0);
             setMetrics({total: expectedTotal});
             $statusLabel.text($t('Preparing'));
-            $summary.text($t('Preparing your reindex job'));
-            $detail.text($t('Selected indexers are being added to Magento\'s background queue.'));
+            $summary.text(replaceTokens($t('Preparing your %1 job'), {'%1': label}));
+            $detail.text($t('Selected indexers are being checked and added to Magento\'s background queue.'));
             $remaining.text($t('Starting background job...'));
             $results.empty();
             $resultsPanel.prop('hidden', true);
@@ -104,12 +108,25 @@ define([
             $element.removeAttr('hidden').modal('openModal');
         }
 
-        function showQueued() {
+        function showQueued(workerDetected, existingCount) {
             setState('queued');
             setProgress(0);
             $statusLabel.text($t('Queued'));
-            $summary.text($t('Background job queued'));
-            $detail.text($t('Waiting for Magento queue consumer to start.'));
+
+            if (!workerDetected) {
+                $summary.text($t('Background worker not detected'));
+                $detail.text(config.workerWarning);
+                $remaining.text($t('Waiting for the consumer to be started...'));
+                return;
+            }
+
+            if (Number(existingCount) > 0) {
+                $summary.text($t('Existing job found'));
+                $detail.text($t('An active operation was reused instead of adding a duplicate queue job.'));
+            } else {
+                $summary.text($t('Background job queued'));
+                $detail.text($t('Waiting for Magento queue consumer to start.'));
+            }
             $remaining.text($t('Waiting to start...'));
         }
 
@@ -118,7 +135,7 @@ define([
             setState('error');
             setProgress(0);
             $statusLabel.text($t('Not started'));
-            $summary.text($t('Reindex could not be started'));
+            $summary.text($t('Indexer operation could not be started'));
             $detail.text(message);
             $remaining.text($t('No background job is running.'));
             $close.removeClass('action-primary').addClass('action-secondary')
@@ -149,7 +166,11 @@ define([
                 refreshOnClose = true;
                 setState(data.failed > 0 ? 'error' : 'complete');
                 $statusLabel.text(data.failed > 0 ? $t('Completed with issues') : $t('Complete'));
-                $summary.text(data.failed > 0 ? $t('Reindex completed with issues') : $t('Reindex completed'));
+                $summary.text(
+                    data.failed > 0 ?
+                        $t('Indexer operation completed with issues') :
+                        $t('Indexer operation completed')
+                );
                 $detail.text(replaceTokens(
                     $t('%1 completed, %2 skipped, %3 failed.'),
                     {'%1': data.successful, '%2': data.skipped, '%3': data.failed}
@@ -164,7 +185,7 @@ define([
 
             setState(data.finished > 0 ? 'running' : 'queued');
             $statusLabel.text(data.finished > 0 ? $t('Running') : $t('Queued'));
-            $summary.text(data.finished > 0 ? $t('Reindexing in background') : $t('Waiting to start'));
+            $summary.text(data.finished > 0 ? $t('Processing in background') : $t('Waiting to start'));
             $detail.text(replaceTokens(
                 $t('%1 of %2 selected indexers processed.'),
                 {'%1': data.finished, '%2': data.total}
@@ -175,7 +196,7 @@ define([
             ));
         }
 
-        function poll(bulkUuid) {
+        function poll(bulkUuids, indexerIds) {
             if (stopped) {
                 return;
             }
@@ -183,7 +204,10 @@ define([
             pollRequest = $.ajax({
                 url: config.statusUrl,
                 type: 'GET',
-                data: {uuid: bulkUuid},
+                data: {
+                    uuids: bulkUuids.join(','),
+                    indexer_ids: indexerIds.join(',')
+                },
                 dataType: 'json',
                 cache: false,
                 showLoader: false
@@ -191,7 +215,7 @@ define([
                 if (data.error) {
                     $detail.text($t('Progress is temporarily unavailable. Retrying...'));
                     timer = window.setTimeout(function () {
-                        poll(bulkUuid);
+                        poll(bulkUuids, indexerIds);
                     }, 5000);
                     return;
                 }
@@ -199,7 +223,7 @@ define([
                 render(data);
                 if (!data.done) {
                     timer = window.setTimeout(function () {
-                        poll(bulkUuid);
+                        poll(bulkUuids, indexerIds);
                     }, 2000);
                 }
             }).fail(function (xhr, status) {
@@ -209,23 +233,27 @@ define([
 
                 $detail.text($t('Progress is temporarily unavailable. Retrying...'));
                 timer = window.setTimeout(function () {
-                    poll(bulkUuid);
+                    poll(bulkUuids, indexerIds);
                 }, 5000);
             });
         }
 
-        function selectedCount(checkedString) {
+        function selectedIds(checkedString) {
             if (!checkedString) {
-                return 0;
+                return [];
             }
 
-            return checkedString.split(',').filter(function (value) {
-                return value.trim() !== '';
-            }).length;
+            return checkedString.split(',').map(function (value) {
+                return value.trim();
+            }).filter(function (value) {
+                return value !== '';
+            });
         }
 
-        function submitReindex(massAction, fieldName, item) {
+        function submitOperation(massAction, fieldName, item) {
             var $form = $(massAction.form),
+                ids = selectedIds(massAction.checkedString),
+                label = item.id === 'reset_selected' ? $t('Reset') : $t('Reindex'),
                 formData;
 
             if (submitting) {
@@ -249,7 +277,7 @@ define([
                 return;
             }
 
-            openProgress(selectedCount(massAction.checkedString));
+            openProgress(ids.length, label);
             submitting = true;
             formData = $form.serializeArray();
             formData.push({name: 'isAjax', value: '1'});
@@ -261,17 +289,23 @@ define([
                 dataType: 'json',
                 showLoader: false
             }).done(function (response) {
-                if (!response.success || !response.bulk_uuid) {
-                    showError(response.message || $t('The reindex job could not be queued.'));
+                var bulkUuids = response.bulk_uuids || (response.bulk_uuid ? [response.bulk_uuid] : []),
+                    indexerIds = response.indexer_ids || ids;
+
+                if (!response.success || bulkUuids.length === 0) {
+                    showError(response.message || $t('The indexer job could not be queued.'));
                     return;
                 }
 
-                showQueued();
-                poll(response.bulk_uuid);
+                showQueued(response.worker_detected, response.existing_count);
+                poll(bulkUuids, indexerIds);
             }).fail(function (xhr) {
                 var response = xhr.responseJSON || {};
 
-                showError(response.message || $t('The reindex job could not be queued. Refresh the page and try again.'));
+                showError(
+                    response.message ||
+                    $t('The indexer job could not be queued. Refresh the page and try again.')
+                );
             }).always(function () {
                 submitting = false;
             });
@@ -279,6 +313,7 @@ define([
 
         function installMassActionInterceptor(attempt) {
             var massAction = config.massActionObject ? window[config.massActionObject] : null,
+                actionIds = config.actionIds || [config.actionId],
                 originalOnConfirm;
 
             if (!massAction) {
@@ -296,12 +331,12 @@ define([
 
             originalOnConfirm = massAction.onConfirm;
             massAction.onConfirm = function (fieldName, item) {
-                if (item.id !== config.actionId) {
+                if (actionIds.indexOf(item.id) === -1) {
                     originalOnConfirm.call(massAction, fieldName, item);
                     return;
                 }
 
-                submitReindex(massAction, fieldName, item);
+                submitOperation(massAction, fieldName, item);
             };
             massAction.adminReindexAjaxInstalled = true;
         }
@@ -312,10 +347,10 @@ define([
 
         installMassActionInterceptor(0);
 
-        if (config.initialBulkUuid) {
-            openProgress(0);
-            showQueued();
-            poll(config.initialBulkUuid);
+        if (config.initialBulkUuids && config.initialBulkUuids.length > 0) {
+            openProgress(config.initialIndexerIds.length, actionLabel(config.initialAction));
+            showQueued(config.workerDetected, 0);
+            poll(config.initialBulkUuids, config.initialIndexerIds || []);
         }
     };
 });

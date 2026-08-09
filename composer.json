@@ -1,6 +1,6 @@
 {
     "name": "haroone/module-admin-reindex",
-    "description": "Adds secure background reindexing with progress to Magento 2 Index Management.",
+    "description": "Adds secure background reindex and reset actions with progress to Magento 2 Index Management.",
     "type": "magento2-module",
     "license": "MIT",
     "keywords": [
@@ -28,6 +28,7 @@
         "magento/module-asynchronous-operations": "^100.4.4",
         "magento/module-authorization": "^100.4.4",
         "magento/module-backend": "^102.0.4",
+        "magento/module-cron": "^100.4.4",
         "magento/module-indexer": "^100.4.4",
         "magento/module-message-queue": "^100.4.4"
     },

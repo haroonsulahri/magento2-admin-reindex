@@ -9,7 +9,9 @@ declare(strict_types=1);
 
 namespace Haroone\AdminReindex\Controller\Adminhtml\Indexer;
 
+use Haroone\AdminReindex\Model\ConsumerHealth;
 use Haroone\AdminReindex\Model\ReindexScheduler;
+use Haroone\AdminReindex\Model\ScheduleResult;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
@@ -35,22 +37,28 @@ class Reindex extends Action implements HttpPostActionInterface
     /** @var JsonFactory */
     private JsonFactory $resultJsonFactory;
 
+    /** @var ConsumerHealth */
+    private ConsumerHealth $consumerHealth;
+
     /**
      * @param Context $context
      * @param ReindexScheduler $scheduler
      * @param LoggerInterface $logger
      * @param JsonFactory $resultJsonFactory
+     * @param ConsumerHealth $consumerHealth
      */
     public function __construct(
         Context $context,
         ReindexScheduler $scheduler,
         LoggerInterface $logger,
-        JsonFactory $resultJsonFactory
+        JsonFactory $resultJsonFactory,
+        ConsumerHealth $consumerHealth
     ) {
         parent::__construct($context);
         $this->scheduler = $scheduler;
         $this->logger = $logger;
         $this->resultJsonFactory = $resultJsonFactory;
+        $this->consumerHealth = $consumerHealth;
     }
 
     /**
@@ -66,30 +74,40 @@ class Reindex extends Action implements HttpPostActionInterface
         }
 
         try {
-            $bulkUuid = $this->scheduler->schedule($requestedIds);
+            $workerDetected = $this->consumerHealth->isWorkerDetected();
+            $scheduleResult = $this->scheduler->schedule($requestedIds, $this->getAction());
             if ($this->isAjaxRequest()) {
                 return $this->resultJsonFactory->create()->setData(
                     [
                         'success' => true,
-                        'bulk_uuid' => $bulkUuid,
+                        'bulk_uuid' => $scheduleResult->getBulkUuids()[0] ?? '',
+                        'bulk_uuids' => $scheduleResult->getBulkUuids(),
+                        'indexer_ids' => $scheduleResult->getIndexerIds(),
+                        'queued_count' => $scheduleResult->getQueuedCount(),
+                        'existing_count' => $scheduleResult->getExistingCount(),
+                        'worker_detected' => $workerDetected,
+                        'action' => $this->getAction(),
+                        'action_label' => $this->getActionLabel(),
                     ]
                 );
             }
 
-            $this->messageManager->addSuccessMessage(
-                __('Reindexing was queued in the background. You may leave this page.')
-            );
-            return $this->redirectToIndexManagement($bulkUuid);
+            if (!$workerDetected) {
+                $this->messageManager->addWarningMessage($this->getWorkerWarning());
+            }
+            $this->messageManager->addSuccessMessage($this->getSuccessMessage($scheduleResult));
+
+            return $this->redirectToIndexManagement($scheduleResult);
         } catch (LocalizedException $exception) {
             return $this->errorResponse($exception->getMessage(), 400);
         } catch (Throwable $exception) {
             $this->logger->error(
-                'Admin reindex scheduling failed.',
-                ['exception' => $exception]
+                'Admin indexer operation scheduling failed.',
+                ['action' => $this->getAction(), 'exception' => $exception]
             );
 
             return $this->errorResponse(
-                __('The reindex job could not be queued. Check the Magento logs.'),
+                __('The indexer job could not be queued. Check the Magento logs.'),
                 500
             );
         }
@@ -151,13 +169,71 @@ class Reindex extends Action implements HttpPostActionInterface
     /**
      * Build the redirect back to Index Management.
      *
-     * @param string|null $bulkUuid
+     * @param ScheduleResult|null $scheduleResult
      * @return \Magento\Framework\Controller\Result\Redirect
      */
-    private function redirectToIndexManagement(?string $bulkUuid = null)
+    private function redirectToIndexManagement(?ScheduleResult $scheduleResult = null)
     {
-        $arguments = $bulkUuid === null ? [] : ['_query' => ['bulk_uuid' => $bulkUuid]];
+        $arguments = [];
+        if ($scheduleResult !== null) {
+            $arguments = [
+                '_query' => [
+                    'bulk_uuids' => implode(',', $scheduleResult->getBulkUuids()),
+                    'indexer_ids' => implode(',', $scheduleResult->getIndexerIds()),
+                    'operation' => $this->getAction(),
+                ],
+            ];
+        }
 
         return $this->resultRedirectFactory->create()->setPath('indexer/indexer/list', $arguments);
+    }
+
+    /**
+     * Return the queue action encoded in each operation.
+     */
+    protected function getAction(): string
+    {
+        return ReindexScheduler::ACTION_REINDEX;
+    }
+
+    /**
+     * Return the translated operation label used by the modal.
+     */
+    protected function getActionLabel(): string
+    {
+        return (string) __('Reindex');
+    }
+
+    /**
+     * Build the success message for new and deduplicated operations.
+     *
+     * @param ScheduleResult $scheduleResult
+     * @return \Magento\Framework\Phrase
+     */
+    protected function getSuccessMessage(ScheduleResult $scheduleResult)
+    {
+        if ($scheduleResult->getQueuedCount() === 0) {
+            return __('This indexer operation is already queued. Showing its current progress.');
+        }
+
+        if ($scheduleResult->getExistingCount() > 0) {
+            return __(
+                '%1 indexer(s) queued; %2 already had an active operation.',
+                $scheduleResult->getQueuedCount(),
+                $scheduleResult->getExistingCount()
+            );
+        }
+
+        return __('Reindexing was queued in the background. You may leave this page.');
+    }
+
+    /**
+     * Return the worker warning shared with the Index Management banner.
+     *
+     * @return \Magento\Framework\Phrase
+     */
+    private function getWorkerWarning()
+    {
+        return __('Background worker not detected — jobs will queue but won\'t run until the consumer is started.');
     }
 }

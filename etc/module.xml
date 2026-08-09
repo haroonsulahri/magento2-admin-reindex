@@ -11,6 +11,7 @@
     <module name="Haroone_AdminReindex">
         <sequence>
             <module name="Magento_AsynchronousOperations"/>
+            <module name="Magento_Cron"/>
             <module name="Magento_Indexer"/>
             <module name="Magento_MessageQueue"/>
         </sequence>

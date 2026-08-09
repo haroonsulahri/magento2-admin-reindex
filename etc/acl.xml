@@ -15,7 +15,7 @@
                     <resource id="Magento_Backend::tools">
                         <resource id="Magento_Indexer::index">
                             <resource id="Haroone_AdminReindex::reindex"
-                                      title="Reindex Data"
+                                      title="Reindex and Reset Data"
                                       translate="title"
                                       sortOrder="60"/>
                         </resource>

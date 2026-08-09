@@ -10,12 +10,17 @@ declare(strict_types=1);
 namespace Haroone\AdminReindex\Test\Unit\Model;
 
 use Haroone\AdminReindex\Model\Consumer;
+use Haroone\AdminReindex\Model\ReindexScheduler;
 use Magento\AsynchronousOperations\Api\Data\OperationInterface;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Bulk\OperationManagementInterface;
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\EntityManager\EntityManager;
 use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Framework\Indexer\IndexerRegistry;
 use Magento\Framework\Lock\LockManagerInterface;
 use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Framework\Stdlib\DateTime\DateTime;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -41,6 +46,12 @@ class ConsumerTest extends TestCase
     /** @var Consumer */
     private Consumer $consumer;
 
+    /** @var OperationManagementInterface&MockObject */
+    private OperationManagementInterface $operationManagement;
+
+    /** @var AdapterInterface&MockObject */
+    private AdapterInterface $connection;
+
     /** @var OperationInterface&MockObject */
     private OperationInterface $operation;
 
@@ -63,7 +74,16 @@ class ConsumerTest extends TestCase
         $this->entityManager = $this->createMock(EntityManager::class);
         $this->lockManager = $this->createMock(LockManagerInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->operationManagement = $this->createMock(OperationManagementInterface::class);
+        $resourceConnection = $this->createMock(ResourceConnection::class);
+        $this->connection = $this->createMock(AdapterInterface::class);
+        $dateTime = $this->createMock(DateTime::class);
         $this->operation = $this->createMock(OperationInterface::class);
+
+        $resourceConnection->method('getConnection')->willReturn($this->connection);
+        $resourceConnection->method('getTableName')->with('magento_operation')->willReturn('magento_operation');
+        $dateTime->method('gmtTimestamp')->willReturn(1000);
+        $this->connection->method('formatDate')->with(1000)->willReturn('started-at');
 
         $this->operation->method('getSerializedData')->willReturn('{"indexer_id":"customer_grid"}');
         $this->operation->method('setStatus')->willReturnCallback(function (int $status) {
@@ -94,7 +114,10 @@ class ConsumerTest extends TestCase
             $this->indexerRegistry,
             $this->entityManager,
             $this->lockManager,
-            $this->logger
+            $this->logger,
+            $this->operationManagement,
+            $resourceConnection,
+            $dateTime
         );
     }
 
@@ -142,6 +165,68 @@ class ConsumerTest extends TestCase
         );
     }
 
+    public function testResetsIndexerAndPersistsProgress(): void
+    {
+        $indexer = $this->createIndexer('Customer Grid', false);
+        $this->serializer->method('unserialize')->willReturn(
+            ['indexer_id' => 'customer_grid', 'action' => ReindexScheduler::ACTION_RESET]
+        );
+        $this->indexerRegistry->method('get')->willReturn($indexer);
+        $this->lockManager->method('lock')->willReturn(true);
+        $this->lockManager->expects($this->once())->method('unlock')->willReturn(true);
+        $indexer->expects($this->once())->method('invalidate');
+        $indexer->expects($this->never())->method('reindexAll');
+
+        $this->consumer->process($this->operation);
+
+        $this->assertSame(
+            [
+                $this->expectedUpdate(OperationInterface::STATUS_TYPE_OPEN, null, 'Resetting: Customer Grid'),
+                $this->expectedUpdate(
+                    OperationInterface::STATUS_TYPE_COMPLETE,
+                    null,
+                    'Reset to invalid: Customer Grid'
+                ),
+            ],
+            $this->operationUpdates
+        );
+    }
+
+    public function testUpdatesPrePersistedOperationThroughNativeBulkApi(): void
+    {
+        $indexer = $this->createIndexer('Customer Grid', true);
+        $this->serializer->method('unserialize')->willReturn(['indexer_id' => 'customer_grid']);
+        $this->indexerRegistry->method('get')->willReturn($indexer);
+        $this->lockManager->method('lock')->willReturn(true);
+        $this->operation->method('getId')->willReturn(0);
+        $this->operation->method('getBulkUuid')->willReturn('123e4567-e89b-12d3-a456-426614174000');
+        $this->connection->expects($this->once())
+            ->method('update')
+            ->with(
+                'magento_operation',
+                ['started_at' => 'started-at'],
+                [
+                    'bulk_uuid = ?' => '123e4567-e89b-12d3-a456-426614174000',
+                    'operation_key = ?' => 0,
+                ]
+            );
+        $this->entityManager->expects($this->never())->method('save');
+        $this->operationManagement->expects($this->once())
+            ->method('changeOperationStatus')
+            ->with(
+                '123e4567-e89b-12d3-a456-426614174000',
+                0,
+                OperationInterface::STATUS_TYPE_COMPLETE,
+                Consumer::ERROR_CODE_SKIPPED,
+                'Skipped because already running: Customer Grid',
+                '{"indexer_id":"customer_grid"}',
+                null
+            )
+            ->willReturn(true);
+
+        $this->consumer->process($this->operation);
+    }
+
     public function testLogsFailurePersistsItAndReturnsForNextQueueMessage(): void
     {
         $indexer = $this->createIndexer('Customer Grid', false);
@@ -157,6 +242,7 @@ class ConsumerTest extends TestCase
                 'Background admin reindex failed.',
                 $this->callback(
                     static fn (array $context): bool => $context['indexer_id'] === 'customer_grid'
+                        && $context['action'] === ReindexScheduler::ACTION_REINDEX
                         && $context['exception'] === $exception
                 )
             );

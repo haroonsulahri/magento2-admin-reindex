@@ -26,6 +26,8 @@ class ItemsUpdaterTest extends TestCase
         $options = $updater->update($this->getOptions());
 
         $this->assertArrayHasKey('reindex_selected', $options);
+        $this->assertArrayHasKey('reset_selected', $options);
+        $this->assertArrayNotHasKey('invalidate_index', $options);
         $this->assertArrayHasKey('change_mode_onthefly', $options);
     }
 
@@ -42,6 +44,8 @@ class ItemsUpdaterTest extends TestCase
         $options = $updater->update($this->getOptions());
 
         $this->assertArrayNotHasKey('reindex_selected', $options);
+        $this->assertArrayNotHasKey('reset_selected', $options);
+        $this->assertArrayNotHasKey('invalidate_index', $options);
         $this->assertArrayHasKey('change_mode_onthefly', $options);
     }
 
@@ -52,7 +56,9 @@ class ItemsUpdaterTest extends TestCase
     {
         return [
             'change_mode_onthefly' => ['label' => 'Update on Save'],
+            'invalidate_index' => ['label' => 'Invalidate index'],
             'reindex_selected' => ['label' => 'Reindex'],
+            'reset_selected' => ['label' => 'Reset'],
         ];
     }
 }

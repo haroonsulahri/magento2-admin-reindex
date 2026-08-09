@@ -21,6 +21,11 @@
                         <item name="url" xsi:type="string">haroone_adminreindex/indexer/reindex</item>
                         <item name="confirm" xsi:type="string" translate="true">Queue the selected indexer(s) for background reindexing?</item>
                     </item>
+                    <item name="reset_selected" xsi:type="array">
+                        <item name="label" xsi:type="string" translate="true">Reset</item>
+                        <item name="url" xsi:type="string">haroone_adminreindex/indexer/reset</item>
+                        <item name="confirm" xsi:type="string" translate="true">Reset the selected indexer(s) to invalid in the background?</item>
+                    </item>
                 </argument>
             </arguments>
         </referenceBlock>
@@ -28,7 +33,7 @@
             <block class="Haroone\AdminReindex\Block\Adminhtml\Progress"
                    name="haroone.adminreindex.progress"
                    template="Haroone_AdminReindex::progress.phtml"
-                   after="-"/>
+                   before="-"/>
         </referenceContainer>
     </body>
 </page>

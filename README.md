@@ -7,7 +7,7 @@
 <h1 align="center">Admin Reindex for Magento 2</h1>
 
 <p align="center">
-  Run selected Magento indexers from the native Index Management grid, in the background, with live progress.
+  Reindex or reset selected Magento indexers from the native Index Management grid, in the background, with live progress.
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
 
 <p align="center">
   <a href="#installation">Install</a> ·
-  <a href="#run-a-reindex">Run a reindex</a> ·
+  <a href="#run-an-indexer-operation">Run an operation</a> ·
   <a href="#permissions">Permissions</a> ·
   <a href="#support-and-magento-services">Support</a>
 </p>
@@ -29,16 +29,16 @@
 ## Demo
 
 <p align="center">
-  <img src="docs/media/admin-reindex-demo.gif" alt="Selecting Magento indexers and opening the background reindex progress popup" width="960">
+  <img src="docs/media/admin-reindex-demo.gif" alt="Selecting Magento indexers and opening the background indexer progress popup" width="960">
 </p>
 
 The popup opens immediately while Magento's native message queue begins processing the selected indexers in the background.
 
-## Run a reindex
+## Run an indexer operation
 
 1. Open **System > Tools > Index Management**.
 2. Select one or more indexers, or use Magento's **Select All** control.
-3. Choose **Reindex** from the existing **Actions** dropdown and confirm.
+3. Choose **Reindex** or **Reset** from the existing **Actions** dropdown and confirm.
 4. Watch successful, running, skipped, failed, and remaining indexers in the progress popup.
 5. Leave the page safely, or close the completed popup to refresh the grid statuses and timestamps.
 
@@ -46,17 +46,21 @@ The popup opens immediately while Magento's native message queue begins processi
   <img src="docs/media/admin-reindex-action.png" alt="Reindex action in Magento Index Management" width="960">
 </p>
 
-The admin request only schedules the work. Magento's message queue executes each selected indexer in the background, so closing the popup or leaving Index Management does not stop the job.
+**Reindex** runs Magento's full `reindexAll()` operation. **Reset** calls Magento's native `invalidate()` API, which is the same state change as `bin/magento indexer:reset`. The extension replaces Magento's synchronous **Invalidate index** entry with the background **Reset** entry to avoid duplicate actions.
+
+The admin request only schedules new work. Magento's message queue executes each selected indexer in the background, so closing the popup or leaving Index Management does not stop the job.
 
 ## Why use it?
 
-Magento provides the indexer commands on the server, but it does not provide a native admin action for running selected indexers. This extension adds that missing action without replacing the core grid or building a separate admin page.
+Magento provides indexer commands on the server, but it does not provide a native admin action for running selected indexers. This extension adds that missing operation without replacing the core grid or building a separate admin page.
 
-- Adds **Reindex** to Magento's existing Index Management action list
-- Opens progress immediately without waiting for a full reindex request
+- Adds **Reindex** and **Reset** to Magento's existing Index Management action list
+- Opens progress immediately without waiting for a full indexer request
 - Continues processing after the administrator leaves the page
 - Shows live totals and clear per-indexer results
-- Uses Magento Bulk Operations, Message Queue, ACL, locking, cron runner, and indexer APIs
+- Warns in Index Management when no working consumer path is detected
+- Reuses an active operation instead of queuing the same indexer twice
+- Uses Magento Bulk Operations, Message Queue, ACL, LockManager, cron runner, and indexer APIs
 - Skips an indexer when Magento already reports it as working
 - Logs complete exceptions while showing safe messages in the admin
 - Adds no custom database tables, custom cron job, configuration page, or frontend code
@@ -109,19 +113,36 @@ php bin/magento cache:clean
 
 Run `php bin/magento setup:static-content:deploy -f` as part of the normal deployment flow when the store is in production mode. The progress popup includes small admin JavaScript and CSS files.
 
-## Queue requirement
+## Queue requirement and health check
 
 Magento's `consumers` cron group must be running. A normal Magento cron installation includes the core consumer runner. A dedicated process manager can run the module consumer instead:
 
 ```bash
-php bin/magento queue:consumers:start haroone.adminreindex.indexer
+php bin/magento queue:consumers:start haroone.adminreindex.indexer --single-thread
 ```
 
-If no consumer is running, the job remains queued and the popup shows that it is waiting. The extension deliberately does not start operating-system processes from an admin request.
+`--single-thread` is important for a dedicated process because it holds Magento's standard consumer lock, prevents a duplicate process, and gives the health check a reliable running signal.
+
+Index Management checks worker health when the page renders and again immediately before scheduling. It considers:
+
+- Magento's standard lock for `haroone.adminreindex.indexer`
+- The age of pending module bulk operations
+- The last module operation `started_at` timestamp
+- A recent successful or running `consumers_runner` cron job, when that runner is enabled for this consumer
+
+If no working path is detected, Magento shows: **Background worker not detected — jobs will queue but won't run until the consumer is started.** The warning does not discard the request. Jobs remain queued for the consumer to process later. The extension deliberately does not start operating-system processes from an admin request.
+
+Consumers started without `--single-thread` cannot advertise an idle process through Magento's consumer lock. Recent processing still counts as healthy, but use the documented command for reliable continuous-process detection.
+
+## Duplicate operation guard
+
+Before publishing, the scheduler checks native `magento_operation` records for open operations created by this module. If the same indexer already has a pending or running Reset or Reindex operation, the extension does not publish another message. The popup follows the existing bulk operation instead.
+
+The check and publish step run inside one Magento LockManager lock, preventing two simultaneous admin requests from creating the same operation. A mixed selection can follow existing bulk UUIDs and a newly created bulk together while showing each selected indexer once.
 
 ## Behavior and scope
 
-Each selection runs the full `reindexAll()` operation for that indexer. It does not reindex a specific database table, product, category, or row.
+Reindex runs the full `reindexAll()` operation for each selected indexer. It does not reindex a specific database table, product, category, or row. Reset marks the selected indexer invalid through `invalidate()`; it does not rebuild index data.
 
 The extension does not change:
 
@@ -130,7 +151,7 @@ The extension does not change:
 - Magento cache state
 - Store configuration
 
-Magento's existing yellow **One or more indexers are invalid** notification already tells administrators when reindexing is required. This extension reuses that core behavior instead of adding a competing notification system.
+Magento's existing yellow **One or more indexers are invalid** notification already tells administrators when reindexing is required. Reset reuses that core behavior instead of adding a competing notification system.
 
 ## Core Magento features reused
 
@@ -138,7 +159,7 @@ Magento's existing yellow **One or more indexers are invalid** notification alre
 - `IndexerRegistry` and indexer working state
 - Native Bulk Operations persistence and history
 - Message Queue and the Magento consumer cron group
-- Magento Lock Manager for sequential module jobs
+- Magento LockManager for sequential processing and race-safe scheduling
 - Invalid-indexer system notification
 - Admin modal, translations, and non-JavaScript form fallback
 
@@ -146,25 +167,41 @@ Administrators with Magento's **Bulk Actions** permission can also see jobs in t
 
 ## Permissions
 
-The extension adds **Reindex Data** beneath **Index Management** in Magento ACL. Grant it under **System > Permissions > User Roles > Role Resources**.
+The extension adds **Reindex and Reset Data** beneath **Index Management** in Magento ACL. Grant it under **System > Permissions > User Roles > Role Resources**.
 
-Users without this permission cannot schedule jobs, request progress, or see the **Reindex** action. Progress data is restricted to the admin user who created the bulk job.
+Users without this permission cannot schedule jobs, request progress, or see the **Reindex** or **Reset** actions. The progress endpoint returns only this module's operations and only for validated bulk UUIDs and indexer IDs. This allows an authorized administrator to follow an existing deduplicated job created by another authorized administrator without exposing unrelated Magento bulk operations.
+
+## LockManager backend and multi-node safety
+
+The extension does not implement or force a lock backend. It injects Magento's public `LockManagerInterface`, so both the per-operation processing lock and the scheduling deduplication lock use the store's configured Magento lock provider.
+
+Magento reads the provider from `app/etc/env.php` at `lock/provider`. If it is omitted, Magento defaults to `db`.
+
+| `lock/provider` | Where the lock lives | Multi-node guidance |
+| --- | --- | --- |
+| `db` | Magento database advisory locks | Safe when every web and consumer node uses the same database. This is Magento's default and the module's safest out-of-box multi-node choice. |
+| `cache` | Magento cache lock backend | Safe only when every node uses the same shared lock-capable cache backend. A shared Redis cache is the common setup; the provider value is still `cache`, not `redis`. |
+| `zookeeper` | Shared ZooKeeper service | Safe when all nodes use the same ZooKeeper ensemble and the PHP extension is installed. |
+| `file` | Filesystem lock files | Suitable for one node. Do not use it for multi-node or Cloud deployments unless every node shares a filesystem with reliable cross-node file locking. |
+
+For a multi-node or Cloud deployment, verify the resolved provider before enabling admin operations. The database provider is safe out of the box when the application nodes share Magento's database. A file provider on node-local storage is not safe because two nodes can acquire independent copies of the same lock.
 
 ## Failure handling
 
 - An indexer already marked as working is skipped.
+- A pending or running module operation for the same indexer is reused.
 - One failed indexer does not prevent later queued indexers from running.
 - The popup exposes only safe summaries.
-- Full exceptions are written to Magento logs with the indexer ID.
-- A global Magento lock keeps module-created reindex operations sequential, even with multiple consumer processes.
+- Full exceptions are written to Magento logs with the indexer ID and action.
+- A global Magento lock keeps module-created Reset and Reindex operations sequential, even with multiple consumer processes.
 
 ## Security
 
-- POST-only scheduling endpoint with Magento form-key validation
+- POST-only scheduling endpoints with Magento form-key validation
 - GET-only progress endpoint
-- Dedicated ACL permission on both endpoints
+- Dedicated ACL permission on all endpoints
 - Strict indexer ID and bulk UUID validation
-- Bulk-job ownership validation
+- Module-topic and validated UUID/indexer filtering on progress requests
 - Escaped PHP output and result text inserted through jQuery text nodes
 
 Please report security issues privately through [Haroone Agency contact](https://haroone.com/contact) instead of opening a public issue.

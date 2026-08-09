@@ -10,7 +10,9 @@ declare(strict_types=1);
 namespace Haroone\AdminReindex\Test\Unit\Controller\Adminhtml\Indexer;
 
 use Haroone\AdminReindex\Controller\Adminhtml\Indexer\Reindex;
+use Haroone\AdminReindex\Model\ConsumerHealth;
 use Haroone\AdminReindex\Model\ReindexScheduler;
+use Haroone\AdminReindex\Model\ScheduleResult;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\CsrfAwareActionInterface;
@@ -48,6 +50,9 @@ class ReindexTest extends TestCase
     /** @var LoggerInterface&MockObject */
     private LoggerInterface $logger;
 
+    /** @var ConsumerHealth&MockObject */
+    private ConsumerHealth $consumerHealth;
+
     /** @var Reindex */
     private Reindex $controller;
 
@@ -72,6 +77,8 @@ class ReindexTest extends TestCase
         $this->json = $this->createMock(Json::class);
         $this->scheduler = $this->createMock(ReindexScheduler::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->consumerHealth = $this->createMock(ConsumerHealth::class);
+        $this->consumerHealth->method('isWorkerDetected')->willReturn(true);
 
         $redirectFactory = $this->createMock(RedirectFactory::class);
         $jsonFactory = $this->createMock(JsonFactory::class);
@@ -111,7 +118,8 @@ class ReindexTest extends TestCase
             $context,
             $this->scheduler,
             $this->logger,
-            $jsonFactory
+            $jsonFactory,
+            $this->consumerHealth
         );
     }
 
@@ -142,14 +150,23 @@ class ReindexTest extends TestCase
         $this->requestedIds = ['catalog_product_price'];
         $this->scheduler->expects($this->once())
             ->method('schedule')
-            ->with($this->requestedIds)
-            ->willReturn(self::BULK_UUID);
+            ->with($this->requestedIds, ReindexScheduler::ACTION_REINDEX)
+            ->willReturn($this->scheduleResult());
         $this->messageManager->expects($this->once())
             ->method('addSuccessMessage')
             ->with($this->phrase('Reindexing was queued in the background. You may leave this page.'));
         $this->redirect->expects($this->once())
             ->method('setPath')
-            ->with('indexer/indexer/list', ['_query' => ['bulk_uuid' => self::BULK_UUID]])
+            ->with(
+                'indexer/indexer/list',
+                [
+                    '_query' => [
+                        'bulk_uuids' => self::BULK_UUID,
+                        'indexer_ids' => 'catalog_product_price',
+                        'operation' => ReindexScheduler::ACTION_REINDEX,
+                    ],
+                ]
+            )
             ->willReturnSelf();
 
         $this->assertSame($this->redirect, $this->controller->execute());
@@ -161,14 +178,34 @@ class ReindexTest extends TestCase
         $this->requestedIds = 'catalog_product_price, catalogsearch_fulltext';
         $this->scheduler->expects($this->once())
             ->method('schedule')
-            ->with(['catalog_product_price', 'catalogsearch_fulltext'])
-            ->willReturn(self::BULK_UUID);
+            ->with(
+                ['catalog_product_price', 'catalogsearch_fulltext'],
+                ReindexScheduler::ACTION_REINDEX
+            )
+            ->willReturn(
+                new ScheduleResult(
+                    [self::BULK_UUID],
+                    ['catalog_product_price', 'catalogsearch_fulltext'],
+                    2,
+                    0
+                )
+            );
         $this->messageManager->expects($this->never())->method('addSuccessMessage');
         $this->redirect->expects($this->never())->method('setPath');
 
         $this->assertSame($this->json, $this->controller->execute());
         $this->assertSame(
-            ['success' => true, 'bulk_uuid' => self::BULK_UUID],
+            [
+                'success' => true,
+                'bulk_uuid' => self::BULK_UUID,
+                'bulk_uuids' => [self::BULK_UUID],
+                'indexer_ids' => ['catalog_product_price', 'catalogsearch_fulltext'],
+                'queued_count' => 2,
+                'existing_count' => 0,
+                'worker_detected' => true,
+                'action' => ReindexScheduler::ACTION_REINDEX,
+                'action_label' => 'Reindex',
+            ],
             $this->jsonData
         );
         $this->assertSame(200, $this->jsonStatus);
@@ -226,10 +263,13 @@ class ReindexTest extends TestCase
         $this->scheduler->method('schedule')->willThrowException($exception);
         $this->logger->expects($this->once())
             ->method('error')
-            ->with('Admin reindex scheduling failed.', ['exception' => $exception]);
+            ->with(
+                'Admin indexer operation scheduling failed.',
+                ['action' => ReindexScheduler::ACTION_REINDEX, 'exception' => $exception]
+            );
         $this->messageManager->expects($this->once())
             ->method('addErrorMessage')
-            ->with($this->phrase('The reindex job could not be queued. Check the Magento logs.'));
+            ->with($this->phrase('The indexer job could not be queued. Check the Magento logs.'));
 
         $this->assertSame($this->redirect, $this->controller->execute());
     }
@@ -242,14 +282,17 @@ class ReindexTest extends TestCase
         $this->scheduler->method('schedule')->willThrowException($exception);
         $this->logger->expects($this->once())
             ->method('error')
-            ->with('Admin reindex scheduling failed.', ['exception' => $exception]);
+            ->with(
+                'Admin indexer operation scheduling failed.',
+                ['action' => ReindexScheduler::ACTION_REINDEX, 'exception' => $exception]
+            );
         $this->messageManager->expects($this->never())->method('addErrorMessage');
 
         $this->assertSame($this->json, $this->controller->execute());
         $this->assertSame(
             [
                 'success' => false,
-                'message' => 'The reindex job could not be queued. Check the Magento logs.',
+                'message' => 'The indexer job could not be queued. Check the Magento logs.',
             ],
             $this->jsonData
         );
@@ -259,5 +302,15 @@ class ReindexTest extends TestCase
     private function phrase(string $expected)
     {
         return $this->callback(static fn ($message): bool => (string) $message === $expected);
+    }
+
+    private function scheduleResult(): ScheduleResult
+    {
+        return new ScheduleResult(
+            [self::BULK_UUID],
+            ['catalog_product_price'],
+            1,
+            0
+        );
     }
 }
