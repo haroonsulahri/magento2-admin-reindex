@@ -1,13 +1,18 @@
 {
     "name": "haroone/module-admin-reindex",
-    "description": "Adds secure background reindex and reset actions with progress to Magento 2 Index Management.",
+    "description": "Adds queued Reindex and Reset actions with live progress, worker-health warnings, and duplicate-job protection to Magento 2 Index Management.",
     "type": "magento2-module",
     "license": "MIT",
     "keywords": [
         "magento2",
+        "magento2-extension",
+        "adobe-commerce",
         "admin",
         "indexer",
         "reindex",
+        "reset",
+        "message-queue",
+        "bulk-operations",
         "background"
     ],
     "authors": [
@@ -16,7 +21,7 @@
             "homepage": "https://haroone.com"
         }
     ],
-    "homepage": "https://haroone.com/",
+    "homepage": "https://haroone.com/extensions/magento-2-admin-reindex",
     "support": {
         "issues": "https://github.com/haroonsulahri/magento2-admin-reindex/issues",
         "source": "https://github.com/haroonsulahri/magento2-admin-reindex"

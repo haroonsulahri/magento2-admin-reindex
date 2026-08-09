@@ -1,0 +1,30 @@
+name: Feature request
+description: Propose a focused improvement for Admin Reindex.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Explain the Magento administrator or operations problem, not only the proposed implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the desired workflow, configuration, permissions, and failure behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Note any Magento-native feature, CLI command, or simpler approach already considered.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope confirmation
+      options:
+        - label: The request is generic and does not depend on private store code or customer data.
+          required: true

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-08-09
+## [1.1.0] - 2026-08-10
 
 - Added background **Reset** beside **Reindex** and replaced Magento's duplicate synchronous **Invalidate index** action.
 - Added a worker-health banner based on the consumer lock, pending operation age, last processed timestamp, and consumer cron history.

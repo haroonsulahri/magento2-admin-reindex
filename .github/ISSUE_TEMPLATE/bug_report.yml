@@ -1,0 +1,75 @@
+name: Bug report
+description: Report a reproducible problem with Admin Reindex.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. Remove credentials, customer information, database content, and production-only identifiers before submitting.
+  - type: dropdown
+    id: module_version
+    attributes:
+      label: Module version
+      options:
+        - Latest tagged release
+        - main branch
+        - Older tagged release
+    validations:
+      required: true
+  - type: input
+    id: magento_version
+    attributes:
+      label: Magento version
+      placeholder: 2.4.7-p10
+    validations:
+      required: true
+  - type: input
+    id: php_version
+    attributes:
+      label: PHP version
+      placeholder: 8.3
+    validations:
+      required: true
+  - type: dropdown
+    id: consumer
+    attributes:
+      label: Consumer setup
+      options:
+        - Magento consumers_runner cron
+        - Dedicated consumer with --single-thread
+        - Dedicated consumer without --single-thread
+        - Consumer is not running
+        - Unknown
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the expected and actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Open System > Tools > Index Management
+        2. Select ...
+        3. Choose ...
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized logs or screenshots
+      description: Include only the smallest useful excerpt. Remove secrets and customer or store data.
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and removed sensitive or store-specific data.
+          required: true
+        - label: This is not a security vulnerability. Security reports follow SECURITY.md instead.
+          required: true

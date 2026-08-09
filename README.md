@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://haroone.com/">
-    <img src="docs/media/haroone-admin-reindex-banner.png" alt="Haroone Agency" width="960">
+    <img src="https://raw.githubusercontent.com/haroonsulahri/magento2-admin-reindex/main/docs/media/haroone-admin-reindex-banner.png" alt="Haroone Agency" width="960">
   </a>
 </p>
 
@@ -22,17 +22,11 @@
 <p align="center">
   <a href="#installation">Install</a> ·
   <a href="#run-an-indexer-operation">Run an operation</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
   <a href="#permissions">Permissions</a> ·
+  <a href="https://github.com/haroonsulahri/magento2-admin-reindex/blob/main/CONTRIBUTING.md">Contribute</a> ·
   <a href="#support-and-magento-services">Support</a>
 </p>
-
-## Demo
-
-<p align="center">
-  <img src="docs/media/admin-reindex-demo.gif" alt="Selecting Magento indexers and opening the background indexer progress popup" width="960">
-</p>
-
-The popup opens immediately while Magento's native message queue begins processing the selected indexers in the background.
 
 ## Run an indexer operation
 
@@ -41,10 +35,6 @@ The popup opens immediately while Magento's native message queue begins processi
 3. Choose **Reindex** or **Reset** from the existing **Actions** dropdown and confirm.
 4. Watch successful, running, skipped, failed, and remaining indexers in the progress popup.
 5. Leave the page safely, or close the completed popup to refresh the grid statuses and timestamps.
-
-<p align="center">
-  <img src="docs/media/admin-reindex-action.png" alt="Reindex action in Magento Index Management" width="960">
-</p>
 
 **Reindex** runs Magento's full `reindexAll()` operation. **Reset** calls Magento's native `invalidate()` API, which is the same state change as `bin/magento indexer:reset`. The extension replaces Magento's synchronous **Invalidate index** entry with the background **Reset** entry to avoid duplicate actions.
 
@@ -77,6 +67,10 @@ Magento provides indexer commands on the server, but it does not provide a nativ
 | 2.4.9 | 8.4, 8.5 | 2.4.9 / PHP 8.5 |
 
 The module supports Magento Open Source and Adobe Commerce. CI installs the latest publicly available `magento/project-community-edition` package for each release line; Adobe Commerce extended-support patch numbers can be higher. The compatibility matrix follows Adobe's published [system requirements](https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements) and [released versions](https://experienceleague.adobe.com/en/docs/commerce-operations/release/versions).
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for versioned feature, compatibility, and operational changes.
 
 ## Installation
 
@@ -197,6 +191,8 @@ For a multi-node or Cloud deployment, verify the resolved provider before enabli
 
 ## Security
 
+Please follow the private reporting process in [SECURITY.md](https://github.com/haroonsulahri/magento2-admin-reindex/security/policy) for suspected vulnerabilities. Do not include credentials, customer information, or production data in a public issue.
+
 - POST-only scheduling endpoints with Magento form-key validation
 - GET-only progress endpoint
 - Dedicated ACL permission on all endpoints
@@ -204,13 +200,12 @@ For a multi-node or Cloud deployment, verify the resolved provider before enabli
 - Module-topic and validated UUID/indexer filtering on progress requests
 - Escaped PHP output and result text inserted through jQuery text nodes
 
-Please report security issues privately through [Haroone Agency contact](https://haroone.com/contact) instead of opening a public issue.
-
 ## Support and Magento services
 
 This extension is built and maintained by [Haroone Agency](https://haroone.com/), a Magento-focused ecommerce engineering company working on custom modules, checkout fixes, migrations, performance, and production support.
 
 - Product bugs and feature requests: [GitHub Issues](https://github.com/haroonsulahri/magento2-admin-reindex/issues)
+- Contributions: [Contribution guidelines](https://github.com/haroonsulahri/magento2-admin-reindex/blob/main/CONTRIBUTING.md)
 - Magento engineering: [Haroone Magento services](https://haroone.com/services/magento)
 - Private support and project enquiries: [Contact Haroone Agency](https://haroone.com/contact)
 
