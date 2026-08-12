@@ -87,3 +87,23 @@ jobs:
       - name: Dependency injection compilation
         working-directory: magento
         run: php bin/magento setup:di:compile
+
+  package:
+    name: Release package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, simplexml
+          coverage: none
+          tools: composer:2.10
+      - name: Build verified archive
+        run: bash bin/build-release.sh 0.0.0-ci dist
+      - name: Upload verified archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-reindex-package
+          path: dist/*.zip
+          if-no-files-found: error

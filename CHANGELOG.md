@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added reproducible Linux release packaging, privacy checks, and automatic GitHub release assets.
+
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
