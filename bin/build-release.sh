@@ -48,7 +48,7 @@ tar -C "$source_dir" -cf - \
 find "$stage_dir/package/AdminReindex" -type d -exec chmod 0755 {} +
 find "$stage_dir/package/AdminReindex" -type f -exec chmod 0644 {} +
 
-php "$source_dir/dev/check-release.php" "$stage_dir/package/AdminReindex"
+php "$default_source_dir/dev/check-release.php" "$stage_dir/package/AdminReindex"
 composer validate "$stage_dir/package/AdminReindex/composer.json" --strict --no-check-publish
 
 rm -f -- "$archive"
@@ -65,6 +65,6 @@ fi
 
 mkdir -p "$stage_dir/extracted"
 unzip -q "$archive" -d "$stage_dir/extracted"
-php "$source_dir/dev/check-release.php" "$stage_dir/extracted/AdminReindex"
+php "$default_source_dir/dev/check-release.php" "$stage_dir/extracted/AdminReindex"
 
 printf '%s\n' "$archive"
