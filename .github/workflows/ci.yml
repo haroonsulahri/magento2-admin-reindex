@@ -17,7 +17,7 @@ jobs:
       matrix:
         php: ['8.1', '8.2', '8.3', '8.4', '8.5']
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -61,7 +61,7 @@ jobs:
     env:
       COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           path: extension
       - uses: shivammathur/setup-php@v2
@@ -99,7 +99,7 @@ jobs:
     name: Release package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
@@ -109,7 +109,7 @@ jobs:
       - name: Build verified archive
         run: bash bin/build-release.sh 0.0.0-ci dist
       - name: Upload verified archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: admin-reindex-package
           path: dist/*.zip

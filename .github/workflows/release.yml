@@ -21,12 +21,12 @@ jobs:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - name: Check out release tooling
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: tooling
 
       - name: Check out tagged source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.ref_name }}
           path: source
