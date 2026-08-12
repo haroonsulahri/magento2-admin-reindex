@@ -74,7 +74,13 @@ jobs:
       - name: Install extension in app/code
         run: |
           mkdir -p magento/app/code/Haroone/AdminReindex
-          rsync -a --delete --exclude='.git' --exclude='.github' --exclude='docs' extension/ magento/app/code/Haroone/AdminReindex/
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='bin' \
+            --exclude='dev' \
+            --exclude='docs' \
+            extension/ magento/app/code/Haroone/AdminReindex/
       - name: Enable Magento modules and extension
         working-directory: magento
         run: php bin/magento module:enable --all
