@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
@@ -16,7 +17,7 @@ jobs:
       matrix:
         php: ['8.1', '8.2', '8.3', '8.4', '8.5']
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -60,7 +61,7 @@ jobs:
     env:
       COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           path: extension
       - uses: shivammathur/setup-php@v2
@@ -74,7 +75,13 @@ jobs:
       - name: Install extension in app/code
         run: |
           mkdir -p magento/app/code/Haroone/AdminReindex
-          rsync -a --delete --exclude='.git' --exclude='.github' --exclude='docs' extension/ magento/app/code/Haroone/AdminReindex/
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='bin' \
+            --exclude='dev' \
+            --exclude='docs' \
+            extension/ magento/app/code/Haroone/AdminReindex/
       - name: Enable Magento modules and extension
         working-directory: magento
         run: php bin/magento module:enable --all
@@ -87,3 +94,23 @@ jobs:
       - name: Dependency injection compilation
         working-directory: magento
         run: php bin/magento setup:di:compile
+
+  package:
+    name: Release package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, simplexml
+          coverage: none
+          tools: composer:2.10
+      - name: Build verified archive
+        run: bash bin/build-release.sh 0.0.0-ci dist
+      - name: Upload verified archive
+        uses: actions/upload-artifact@v7
+        with:
+          name: admin-reindex-package
+          path: dist/*.zip
+          if-no-files-found: error

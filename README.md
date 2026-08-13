@@ -72,6 +72,8 @@ The module supports Magento Open Source and Adobe Commerce. CI installs the late
 
 See [CHANGELOG.md](CHANGELOG.md) for versioned feature, compatibility, and operational changes.
 
+Tagged releases include a verified manual-install ZIP built on Linux. The archive is also produced as a CI artifact for every pull request.
+
 ## Installation
 
 ### Composer
